@@ -31,7 +31,7 @@ main(int argc, char *argv[])
     off_t sz = filesize(argv[1]);
     if (sz == -1) {
         return EXIT_FAILURE;
-    } else if (sz == 0 || sz == sizeof(int)) {
+    } else if (sz == 0 || sz == sizeof(double)) {
         return EXIT_SUCCESS;
     } else {
         int file = open(argv[1], O_RDWR, 0666);

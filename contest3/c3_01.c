@@ -1,43 +1,16 @@
-#include <limits.h>
-#include <stdio.h>
-
-void 
-bit_swp(unsigned char* p)
-{
-    unsigned char tmp = 0;
-    for (int i = 0; i < CHAR_BIT; ++i) {
-        printf("%d %d\n", *p, tmp);
-        tmp <<= 1;
-        tmp += *p & 1;
-        *p >>= 1;
-    }
-    *p = tmp;
-}
-
-void 
-swap(unsigned char* a,
-    unsigned char* b)
-{
-    unsigned char tmp = *a;
-    *a = *b;
-    *b = tmp;
-}
-
 STYPE
 bit_reverse(STYPE value)
 {
     UTYPE z = -1;
-    size_t cnt = 0;
-    while (z) {
+    unsigned sz = 0;
+    for(; z != 0; ++sz) {
         z >>= 1;
-        ++cnt;
     }
-    cnt /= CHAR_BIT;
-    UTYPE tmp = value;
-    for (int i = 1; i <= cnt / 2; ++i) {
-        swap((unsigned char*) &tmp, ((unsigned char*) &tmp) + cnt - i);
-        bit_swp((unsigned char*) &tmp);
-        bit_swp(((unsigned char*) &tmp) + cnt - i);
+    UTYPE res = 0, tmp = value;
+    for(unsigned i = 0; i < sz; ++i) {
+        if(tmp & (1ull << i)) {
+            res |= 1ull << ((sz - 1ull) - i);
+        }
     }
-    return (STYPE) tmp;
+    return (STYPE) res;
 }

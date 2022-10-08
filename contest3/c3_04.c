@@ -1,19 +1,18 @@
-enum 
+int
+satsum(int a, int b)
 {
-    MY_INT_MAX = 2147483647,
-    MY_INT_MIN = -2147483648
-};
-
-int 
-satsum(int v1, int v2)
-{
+    enum
+    {
+        MY_INT_MAX = 2147483647,
+        MY_INT_MIN = -2147483648
+    };
     int res;
-    if (v1 > MY_INT_MAX - v2) {
+    if((a > 0 && b > 0) && (a > MY_INT_MAX - b)) {
         res = MY_INT_MAX;
-    } else if (v1 < MY_INT_MIN + v2) {
+    } else if((a < 0 && b < 0) && (a < MY_INT_MIN - b)) {
         res = MY_INT_MIN;
     } else {
-        res = v1 + v2;
+        res = a + b;
     }
     return res;
 }

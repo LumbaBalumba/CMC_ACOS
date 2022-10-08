@@ -3,47 +3,55 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <unistd.h>
-
-off_t
-filesize(const char *filename)
-{
-    struct stat st;
-    if (stat(filename, &st) == 0) {
-        return st.st_size;
-    } else {
-        fprintf(stderr, "Cannot determine file size\n");
-        return -1;
-    }
-}
+#include <limits.h>
 
 
 int
 main(int argc, char *argv[])
 {
-    if (argc <= 1 || argc > 2) {
+    if (argc != 2) {
+        fprintf(stderr, "Program arguments error\n");
         return EXIT_FAILURE;
     }
-    int file = open(argv[1], O_RDWR, O_CREAT, 0666);
-    off_t sz = filesize(argv[1]);
-    if (sz == -1) {
+    int file = open(argv[1], O_RDWR, 0444);
+    if (file == -1) {
+        fprintf(stderr, "File opening error\n");
         return EXIT_FAILURE;
-    } else if (sz == 0) {
+    }
+    struct stat statbuf;
+    if (fstat(file, &statbuf) == -1) {
+        fprintf(stderr, "File info error\n");
+        return EXIT_FAILURE;
+    } else if (statbuf.st_size == 0) {
+        fprintf(stderr, "Empty file, program worked successfully\n");
         return EXIT_SUCCESS;
-    } else {
-        long long l, cur;
-        ssize_t bias = 0;
-        ssize_t cur_bias = 0;
-        read(file, &l, sizeof(l));
-        while (read(file, &cur, sizeof(l))) {
-            cur_bias += sizeof(l);
-            if (cur < l) {
-                l = cur;
-                bias = cur_bias;
-            }
+    }
+    off_t cur_off = 1, min_off = 0;
+    long long l_min = 0, l = 0;
+    if (read(file, &l_min, sizeof(l_min)) != sizeof(l_min)) {
+        fprintf(stderr, "File reading error\n");
+        return EXIT_FAILURE;
+    } else if (statbuf.st_size % sizeof(l)) {
+        fprintf(stderr, "File size error\n");
+        return EXIT_FAILURE;
+    }
+    while (read(file, &l, sizeof(l)) == sizeof(l)) {
+        if (l < l_min) {
+            min_off = cur_off;
+            l_min = l;
         }
-        l = -l;
-        lseek(file, bias, SEEK_SET);
-        write(file, &l, sizeof(l));
-        close(file);
+        cur_off++;
+    }
+    if (l_min != LLONG_MIN) {
+        l_min = -l_min;
+    }
+    lseek(file, min_off * (off_t) sizeof(l), SEEK_SET);
+    write(file, &l_min, sizeof(l_min));
+    if (close(file) == -1) {
+        fprintf(stderr, "File closing error\n");
+        return EXIT_FAILURE;
+    } else {
+        fprintf(stderr, "Program worked successfully\n");
+        return EXIT_SUCCESS;
     }
 }

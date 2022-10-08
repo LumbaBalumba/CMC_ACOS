@@ -1,32 +1,30 @@
-#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
-int main(
-    int argc,
-    char* argv[])
+int
+main(int argc, char *argv[])
 {
-    char* eptr = NULL;
-    long long pos = 0, neg = 0;
-    for (int i = 0; i < argc; ++i) {
-        errno = 0;
-        long long tmp = strtol(argv[i], &eptr, 10);
-        if (errno || eptr == NULL || argv[i] == eptr || tmp != (int)tmp) {
-            fprintf(stderr, "error: data reading error\n");
-            return 1;
-        }
-        if (tmp >= 0) {
-            if (__builtin_add_overflow(pos, tmp, &pos)) {
-                fprintf(stderr, "data is too big\n");
-                return 1;
-            }
-        } else {
-            if (__builtin_add_overflow(neg, tmp, &neg)) {
-                fprintf(stderr, "data is too big\n");
-                return 1;
-            }
-        }
+    if (argc <= 1) {
+        return EXIT_FAILURE;
     }
-    printf("%lld\n%lld\n", pos, neg);
+    char *ep = NULL;
+    double res = strtod(argv[1], &ep);
+    if (*ep || ep == argv[1]) {
+        fprintf(stderr, "data is too big\n");
+        return EXIT_FAILURE;
+    }
+    res = round(res * 10000.0f) / 10000.0f;
+    for (int i = 2; i < argc; ++i) {
+        char *eptr = NULL;
+        double tmp = strtod(argv[i], &eptr);
+        if (*eptr || eptr == argv[i] || fabs(tmp) > 100.0) {
+            fprintf(stderr, "data is too big\n");
+            return EXIT_FAILURE;
+        }
+        res *= 1.0f + tmp / 100.0f;
+        res = round(res * 10000.0f) / 10000.0f;
+    }
+    printf("%.4f\n", res);
 }
