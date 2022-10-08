@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 
 unsigned long
 bin_pow(unsigned long a, unsigned long b, unsigned long m)
@@ -19,7 +20,8 @@ mod_div(unsigned long a, unsigned long b, unsigned long m)
     return a * bin_pow(b, m - 2, m) % m;
 }
 
-int main()
+int
+main()
 {
     unsigned long n;
     if (!scanf("%lu", &n))
@@ -28,13 +30,14 @@ int main()
         printf("0 ");
     }
     printf("\n");
+    unsigned long *arr = calloc(n - 1, sizeof(n));
+    for (int i = 1; i < n; ++i) {
+        arr[i - 1] = mod_div(1, i, n);
+    }
     for (unsigned i = 1; i < n; ++i) {
         for (unsigned j = 1; j < n; ++j) {
-            printf("%lu ", mod_div(i, j, n));
+            printf("%lu ", arr[j - 1] * i % n);
         }
         printf("\n");
     }
 }
-
-//Конкретно сдесь у меня вылез TL, можете поправить и пользоваться если есть
-//такое желание
