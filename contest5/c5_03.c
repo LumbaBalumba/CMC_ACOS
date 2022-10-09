@@ -28,16 +28,3 @@ parse_rwx_permissions(const char *str)
     }
     return (int) res;
 }
-
-int
-main()
-{
-    char str[20];
-    scanf("%s", str);
-    int r = parse_rwx_permissions(str);
-    if (r == -1) {
-        printf("-1\n");
-    } else {
-        printf("%o\n", r);
-    }
-}
