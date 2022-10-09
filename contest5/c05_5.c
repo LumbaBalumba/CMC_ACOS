@@ -20,12 +20,9 @@ copy_file(const char *srcpath, const char *dstpath)
         fprintf(stderr, "Error: cannot read file %s, file may be not existing\n", srcpath);
         return -1;
     }
-    if (!S_ISREG(statbuf.st_mode)) {
+    if (S_ISDIR(statbuf.st_mode)) {
         fprintf(stderr, "Error: %s is not a file\n", srcpath);
         return -1;
-    }
-    if (!strcmp(srcpath, dstpath)) {
-        return 0;
     }
     size_t index = 0;
     size_t l = strlen(srcpath);
@@ -43,6 +40,9 @@ copy_file(const char *srcpath, const char *dstpath)
     if (fd_src == -1 || fd_dst == -1) {
         fprintf(stderr, "Error: cannot open file %s\n", srcpath);
         return -1;
+    }
+    if (fd_src == fd_dst) {
+        return 0;
     }
     size_t cnt = 0;
     unsigned char buf[BUF_SIZE];
