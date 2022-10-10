@@ -15,12 +15,12 @@ enum
 int
 copy_file(const char *srcpath, const char *dstpath)
 {
-    struct stat statbuf;
-    if (stat(srcpath, &statbuf) == -1) {
+    struct stat statbuf1;
+    if (stat(srcpath, &statbuf1) == -1) {
         fprintf(stderr, "Error: cannot read file %s, file may be not existing\n", srcpath);
         return -1;
     }
-    if (S_ISDIR(statbuf.st_mode)) {
+    if (S_ISDIR(statbuf1.st_mode)) {
         fprintf(stderr, "Error: %s is not a file\n", srcpath);
         return -1;
     }
@@ -36,13 +36,14 @@ copy_file(const char *srcpath, const char *dstpath)
         fprintf(stderr, "Error: could not allocate memory for file path\n");
         return -1;
     }
+    struct stat statbuf2;
+    if (lstat(dstfile, &statbuf2) != -1 && statbuf1.st_ino == statbuf2.st_ino) {
+        return 0;
+    }
     int fd_src = open(srcpath, O_RDONLY, 0444), fd_dst = open(dstfile, O_WRONLY | O_CREAT | O_TRUNC, 0666);
     if (fd_src == -1 || fd_dst == -1) {
         fprintf(stderr, "Error: cannot open file %s\n", srcpath);
         return -1;
-    }
-    if (fd_src == fd_dst) {
-        return 0;
     }
     size_t cnt = 0;
     unsigned char buf[BUF_SIZE];
@@ -57,7 +58,7 @@ copy_file(const char *srcpath, const char *dstpath)
     if (cnt != 0) {
         write(fd_dst, buf, sizeof(buf[0]) * (cnt + 1));
     }
-    chmod(dstfile, statbuf.st_mode);
+    chmod(dstfile, statbuf1.st_mode);
     close(fd_src);
     close(fd_dst);
     return 0;
