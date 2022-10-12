@@ -38,9 +38,7 @@ main(int argc, char *argv[])
             }
             int flag = 0;
             for (int j = 0; j < sz; ++j) {
-                struct stat tmp;
-                stat(arr[j].path, &tmp);
-                if (stb.st_ino == tmp.st_ino) {
+                if (stb.st_ino == arr[j].fd) {
                     if (strcmp(argv[i], arr[j].path) > 0) {
                         arr[j] = (struct File) { .path = argv[i], .fd = stb.st_ino };
                     }
