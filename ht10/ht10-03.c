@@ -1,69 +1,70 @@
 #include <stdio.h>
-#include <math.h>
-#include <stdlib.h>
-#include <errno.h>
-#include <fcntl.h>
 #include <sys/stat.h>
-#include <sys/mman.h>
+#include <fcntl.h>
+#include <ctype.h>
+#include <stdlib.h>
 #include <unistd.h>
+#include <sys/mman.h>
+#include <dlfcn.h>
+#include <string.h>
+#include <errno.h>
+#include <inttypes.h>
+#include <limits.h>
 
-void
-fill_matrix(unsigned int n, unsigned int m, unsigned int *arr)
+
+#include <stdio.h>
+#include <stdlib.h>
+
+typedef struct RandomGenerator RandomGenerator;
+typedef struct RandomOperations RandomOperations;
+
+
+struct RandomOperations
 {
-    long i = 0, j, k = 0;
-    unsigned p = 1;
-    while (i < n * m) {
-        k++;
-        if (i == m * n) {
-            break;
-        }
-        for (j = k - 1; j < m - k + 1; j++) {
-            arr[(k - 1) * m + j] = p++;
-            i++;
-        }
-        if (i == m * n) {
-            break;
-        }
+    void
+    (*destroy)(struct RandomGenerator *);
 
-        for (j = k; j < n - k + 1; j++) {
-            arr[j * m + m - k] = p++;
-            i++;
-        }
-        if (i == m * n) {
-            break;
-        }
-        for (j = m - k - 1; j >= k - 1; j--) {
-            arr[(n - k) * m + j] = p++;
-            i++;
-        }
-        if (i == m * n) {
-            break;
-        }
-        for (j = n - k - 1; j >= k; j--) {
-            arr[j * m + k - 1] = p++;
-            i++;
-        }
-    }
-}
+    int
+    (*next)(struct RandomGenerator *);
+};
+
+struct RandomGenerator
+{
+    struct RandomOperations *ops;
+    long long seed, mul, inc, mod;
+};
 
 int
-main(int argc, char **argv)
+next(struct RandomGenerator *rg)
 {
-    if (argc != 4) {
-        return EXIT_FAILURE;
+    return (int) (rg->seed = (rg->seed * rg->mul + rg->inc) % rg->mod);
+}
+
+void
+destroy(struct RandomGenerator *rg)
+{
+    free(rg->ops);
+    free(rg);
+}
+
+
+struct RandomGenerator *
+random_create(long long seed)
+{
+    struct RandomGenerator *rg = calloc(1, sizeof(struct RandomGenerator));
+    if (rg == NULL) {
+        return NULL;
     }
-    errno = 0;
-    char *eptr1, *eptr2;
-    long rows = strtol(argv[2], &eptr1, 10), cols = strtol(argv[3], &eptr2, 10);
-    if (errno || eptr1 == argv[2] || eptr2 == argv[3] || *eptr1 || *eptr2 || (unsigned int) rows != rows ||
-        (unsigned int) cols != cols) {
-        return EXIT_FAILURE;
+    rg->inc = 12345;
+    rg->mul = 1103515245;
+    rg->mod = (1u << 31);
+    rg->seed = seed;
+    rg->ops = calloc(1, sizeof(struct RandomOperations));
+    if (rg->ops == NULL) {
+        free(rg);
+        return NULL;
     }
-    int fdout = open(argv[1], O_RDWR | O_CREAT | O_TRUNC, 0666);
-    ftruncate(fdout, rows * cols * (ssize_t) sizeof(int));
-    fdout = open(argv[1], O_RDWR, 0666);
-    void *ptr = mmap(NULL, rows * cols * sizeof(unsigned int), PROT_READ | PROT_WRITE, MAP_SHARED, fdout, 0);
-    fill_matrix((unsigned int) rows, (unsigned int) cols, ptr);
-    munmap(ptr, rows * cols);
-    close(fdout);
+    rg->ops->next = next;
+    rg->ops->destroy = destroy;
+    return rg;
 }
