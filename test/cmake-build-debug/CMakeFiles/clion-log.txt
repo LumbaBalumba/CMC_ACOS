@@ -1,1 +1,0 @@
-CMakeLists.txt not found in /home/i3alumba/Документы/contest/test Select CMakeLists.txt
