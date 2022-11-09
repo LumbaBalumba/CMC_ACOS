@@ -17,28 +17,29 @@
 /* Код не работает на последнем тесте, где надо вернуть -1 в случае ошибки, фиксить лень*/
 
 int
-main(int argc, char **argv)
+rec_fork()
 {
-    int num1, num2, num3;
-    scanf("%d%d%d", &num1, &num2, &num3);
-    pid_t pid1 = fork();
-    if (!pid1) {
-        printf("1 %d\n", num1 * num1);
-    } else {
-        wait(NULL);
-        pid_t pid2 = fork();
-        if (!pid2) {
-            printf("2 %d\n", num2 * num2);
+    int buf;
+    if (scanf("%d", &buf) != EOF) {
+        pid_t pid = fork();
+        if (pid < 0) {
+            return -1;
+        } else if (!pid) {
+            if (rec_fork() == -1) {
+                return -1;
+            }
         } else {
             wait(NULL);
-            pid_t pid3 = fork();
-            if (!pid3) {
-                printf("3 %d\n", num3 * num3);
-            } else {
-                wait(NULL);
-                fflush(stdout);
-                _exit(EXIT_SUCCESS);
-            }
+            printf("%d\n", buf);
         }
+    }
+    return 0;
+}
+
+int
+main(int argc, char **argv)
+{
+    if (rec_fork() == -1 && getpid()) {
+        printf("-1\n");
     }
 }
