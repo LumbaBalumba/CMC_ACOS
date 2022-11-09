@@ -7,34 +7,32 @@
 #include <sys/mman.h>
 #include <unistd.h>
 #include <sys/wait.h>
-
-void
-rec_fork(int cur, int *n)
-{
-    if (cur == 0) {
-        return;
-    } else {
-        pid_t pid = fork();
-        if (!pid) {
-            rec_fork(cur - 1, n);
-        } else {
-            printf("%d ", cur);
-            wait(NULL);
-        }
-    }
-}
+#include <string.h>
+#include <sys/types.h>
+#include <ctype.h>
+#include <inttypes.h>
+#include <sys/types.h>
+#include <stdbool.h>
 
 int
 main(int argc, char **argv)
 {
     int n;
-    scanf("%d", &n);
-    pid_t pid = fork();
-    if (!pid) {
-        n--;
-        rec_fork(n, &n);
-    } else {
-        wait(NULL);
-        printf("%d\n", n);
+    if (scanf("%d", &n) != 1) {
+        _exit(EXIT_FAILURE);
     }
+    for (int i = 1; i <= n; ++i) {
+        printf("%d%c", i, (i == n) ? '\n' : ' ');
+        fflush(stdout);
+        pid_t pid = fork();
+        if (pid == -1) {
+            _exit(EXIT_FAILURE);
+        } else if (!pid) {
+            continue;
+        } else {
+            wait(NULL);
+            break;
+        }
+    }
+    _exit(EXIT_SUCCESS);
 }
