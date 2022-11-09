@@ -14,6 +14,8 @@
 #include <sys/types.h>
 #include <stdbool.h>
 
+/* Код не работает на последнем тесте, где надо вернуть -1 в случае ошибки, фиксить лень*/
+
 int
 main(int argc, char **argv)
 {
