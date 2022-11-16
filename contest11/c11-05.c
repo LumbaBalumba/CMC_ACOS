@@ -7,39 +7,49 @@
 #include <sys/mman.h>
 #include <unistd.h>
 #include <sys/wait.h>
-#include <string.h>
+#include <stdbool.h>
 #include <sys/types.h>
 #include <ctype.h>
-#include <inttypes.h>
-#include <sys/types.h>
-#include <stdbool.h>
-
-/* Код не работает на последнем тесте, где надо вернуть -1 в случае ошибки, фиксить лень*/
+#include <wait.h>
+#include <dirent.h>
 
 int
-rec_fork()
+main(int argc, char **argv, char **envp)
 {
-    int buf;
-    if (scanf("%d", &buf) != EOF) {
-        pid_t pid = fork();
-        if (pid < 0) {
-            return -1;
-        } else if (!pid) {
-            if (rec_fork() == -1) {
-                return -1;
+    pid_t main_pid = fork();
+    switch (main_pid) {
+        case (-1): {
+            _exit(EXIT_SUCCESS);
+        }
+        case (0): {
+            int num;
+            pid_t pid;
+            while (scanf("%d", &num) == 1) {
+                pid = fork();
+                if (pid == -1) {
+                    _exit(EXIT_FAILURE);
+                } else if (pid) {
+                    int status = EXIT_SUCCESS;
+                    wait(&status);
+                    if (WEXITSTATUS(status) == EXIT_FAILURE) {
+                        _exit(EXIT_FAILURE);
+                    } else {
+                        printf("%d\n", num);
+                        fflush(stdout);
+                        break;
+                    }
+                }
             }
-        } else {
-            wait(NULL);
-            printf("%d\n", buf);
+        }
+        default: {
+            int status = EXIT_SUCCESS;
+            wait(&status);
+            if (WEXITSTATUS(status) == EXIT_FAILURE) {
+                printf("-1\n");
+                fflush(stdout);
+            }
         }
     }
-    return 0;
-}
-
-int
-main(int argc, char **argv)
-{
-    if (rec_fork() == -1 && getpid()) {
-        printf("-1\n");
-    }
+    while (wait(NULL) > 0);
+    _exit(EXIT_SUCCESS);
 }
