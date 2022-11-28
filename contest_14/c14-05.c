@@ -32,7 +32,7 @@ handler(int sig)
 int
 prime(int n)
 {
-    for (int i = 1; i * i <= n; ++i) {
+    for (int i = 2; i * i <= n; ++i) {
         if (n % i == 0) {
             return 0;
         }
@@ -44,6 +44,8 @@ prime(int n)
 int
 main(int argc, char **argv)
 {
+    sigaction(SIGINT, &(struct sigaction) {.sa_handler = handler, .sa_flags = SA_RESTART}, NULL);
+    sigaction(SIGINT, &(struct sigaction) {.sa_handler = handler, .sa_flags = SA_RESTART}, NULL);
     printf("%d\n", getpid());
     int low, high;
     scanf("%d%d", &low, &high);
