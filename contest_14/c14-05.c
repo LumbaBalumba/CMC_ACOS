@@ -6,25 +6,26 @@
 #include <unistd.h>
 #include <wait.h>
 
-int sig_cnt = 0;
-int curr_prime = 0;
+volatile int sig_cnt = 0;
+volatile int curr_prime = 0;
 
 void
 handler(int sig)
 {
     switch (sig) {
-    case SIGTERM: {
-        exit(EXIT_SUCCESS);
-    }
-    case SIGINT: {
-        if (sig_cnt++ == 3) {
+        case SIGTERM: {
             exit(EXIT_SUCCESS);
-        } else {
-            printf("%d\n", curr_prime);
         }
-    }
-    default: {
-    }
+        case SIGINT: {
+            if (sig_cnt++ == 3) {
+                exit(EXIT_SUCCESS);
+            } else {
+                printf("%d\n", curr_prime);
+                fflush(stdout);
+            }
+        }
+        default: {
+        }
     }
 }
 
@@ -45,9 +46,10 @@ prime(int n)
 int
 main(int argc, char **argv)
 {
-    sigaction(SIGINT, &(struct sigaction){.sa_handler = handler, .sa_flags = SA_RESTART}, NULL);
-    sigaction(SIGINT, &(struct sigaction){.sa_handler = handler, .sa_flags = SA_RESTART}, NULL);
+    sigaction(SIGINT, &(struct sigaction) { .sa_handler = handler, .sa_flags = SA_RESTART }, NULL);
+    sigaction(SIGTERM, &(struct sigaction) { .sa_handler = handler, .sa_flags = SA_RESTART }, NULL);
     printf("%d\n", getpid());
+    fflush(stdout);
     int low, high;
     scanf("%d%d", &low, &high);
     for (int i = low; i < high; ++i) {
@@ -56,5 +58,6 @@ main(int argc, char **argv)
         }
     }
     printf("-1\n");
+    fflush(stdout);
     exit(EXIT_SUCCESS);
 }
